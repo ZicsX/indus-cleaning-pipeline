@@ -1,57 +1,41 @@
-### 1. **Architecture Components**
+# 1. **Text-Cleaning Workflow**
 
-1. **Amazon S3**:
-   - `Input` Bucket: Where new text files are uploaded.
-   - `Cleaned` Bucket (or same bucket with a different prefix): Where cleaned text files are stored.
+In this architecture, we'll utilize AWS Lambda, AWS Step Functions, and AWS SNS (Simple Notification Service) to build a scalable, automated text-cleaning workflow. The IndusNLP toolkit will be incorporated into a Lambda function which will be triggered by new text files uploaded to the `Input` folder in the S3 bucket. Post-cleaning, the processed files will be saved in the `Cleaned` folder while maintaining the original folder structure.
 
-2. **AWS Lambda**:
-   - `FileProcessorLambda`: Triggered when a new file is uploaded to the `Input` bucket, initiates the Step Functions execution.
-   - `TextCleanerLambda`: Cleans the text.
+1. **Triggering Mechanism**:
+   - Utilize S3 Event Notifications to trigger a Lambda function whenever a new text file is uploaded to the `Input` folder or any of its subfolders.
 
-3. **AWS Step Functions**:
-   - Orchestrates the workflow of downloading the file from S3, cleaning the text, and uploading the cleaned text back to S3.
+2. **Lambda Function (Text Cleaning)**:
+   - The triggered Lambda function, let’s call it `TextCleaningLambda`, will:
+      - Read the newly uploaded text file from the S3 `Input` folder.
+      - Import and utilize the IndusNLP cleaning toolkit (`indusnlp.cleaning`) to clean the text content.
+      - Save the cleaned text to the corresponding location within the `Cleaned` folder, replicating the original folder structure.
+      - Save the cleaned text to the corresponding location within the `Cleaned` folder, replicating the original folder structure.
 
-4. **Amazon CloudWatch**:
-   - Monitors the Lambda functions and Step Functions for any errors, logs the processing details.
+3. **Error Handling**:
+   - If the Lambda function encounters an error (e.g., unable to read the file, toolkit malfunction, etc.), it will publish an error message to an SNS topic.
 
-5. **Amazon SNS (Optional)**:
-   - Sends notifications in case of any failures or issues during processing.
+4. **Monitoring and Notifications**:
+   - Subscribe to the SNS topic to receive error notifications for prompt troubleshooting.
+   - Use AWS CloudWatch to monitor the executions of the Lambda function and to set up alarms for any unusual activities.
 
-### 2. **Workflow**
+5. **Step Function Orchestration (Optional)**:
+   - If there are additional steps or dependencies in the cleaning process, AWS Step Functions can be utilized to orchestrate the workflow. For example, if a subsequent processing step is required post-cleaning.
 
-1. **File Upload**:
-   - A user uploads a new text file to the `Input` folder in the S3 bucket.
+6. **Access Control and Security**:
+   - Utilize AWS IAM (Identity and Access Management) to control access to the S3 bucket, Lambda function, and other resources.
+   - Ensure that the Lambda function has the necessary permissions to read from the `Input` folder, write to the `Cleaned` folder, and publish to the SNS topic.
 
-2. **Trigger Lambda**:
-   - The upload event triggers the `FileProcessorLambda`. This Lambda function initiates the Step Functions execution and passes the S3 file path as input.
+7. **Optimization**:
+   - Optimize the memory and timeout settings of the Lambda function to ensure efficient processing of the text files.
+   - If the volume of text files is significant, consider increasing the concurrency limit of the Lambda function to handle multiple files simultaneously.
 
-3. **Step Functions Execution**:
-   - **State 1 (Get File)**: The workflow starts by downloading the file content from the `Input` bucket.
-   - **State 2 (Clean Text)**: The content is passed to the `TextCleanerLambda`, which cleans the text and returns the cleaned content.
-   - **State 3 (Save Cleaned File)**: The cleaned text is saved to the `Cleaned` bucket, maintaining the same folder structure or path.
+8. **Logging**:
+   - Implement logging within the `TextCleaningLambda` function to capture important events and any potential errors.
+   - Store logs in AWS CloudWatch for easy access and analysis.
 
-4. **Monitoring & Logging**:
-   - All Lambda function executions, as well as Step Functions execution, are logged in CloudWatch.
-   - Any errors or failures can be monitored in CloudWatch. Optionally, in the case of a failure, a notification can be sent using Amazon SNS.
+9. **Testing and Validation**:
+   - Initially, test the setup with a small number of text files to validate the workflow.
+   - Confirm that the cleaned text files are correctly saved in the `Cleaned` folder with the original folder structure.
 
-5. **Completion**:
-   - Once the Step Functions execution completes, the cleaned file is available in the `Cleaned` bucket, and the original remains in the `Input` folder.
-
-### 3. **Advantages**
-
-1. **Scalability**: AWS Lambda can handle a large number of files concurrently, allowing for high scalability.
-2. **Serverless**: No need to manage any infrastructure.
-3. **Robustness**: AWS Step Functions ensures that each step is completed successfully. In the case of transient failures, it can automatically retry the failed step.
-4. **Maintainability**: The serverless architecture is easy to maintain and modify. If the cleaning process needs to change, only the `TextCleanerLambda` function needs to be updated.
-
-### 4. **Considerations**
-
-1. **Lambda Execution Time**: AWS Lambda has a maximum execution time (15 minutes as of my last update). Ensure that the text cleaning process completes within this timeframe for each file.
-2. **Step Functions Cost**: AWS Step Functions has associated costs per state transition. While it's generally inexpensive, it's something to keep in mind with a large number of files.
-3. **Error Handling**: Ensure that the Step Functions state machine has proper error handling and retry mechanisms for transient failures.
-
-### 5. **Deployment**
-
-1. **Infrastructure as Code (IaC)**: Consider using AWS CloudFormation or the AWS Serverless Application Model (SAM) to define and deploy the architecture. This makes the setup reproducible and version-controlled.
-
-This architecture provides a robust, scalable, and efficient way to process new text files added to the `Input` folder, clean them, and maintain the same folder structure in the `Cleaned` bucket.
+This architecture leverages AWS’s serverless capabilities to automate the text-cleaning process efficiently and ensure that the cleaned text files are accurately organized in the `Cleaned` folder within the S3 bucket.
