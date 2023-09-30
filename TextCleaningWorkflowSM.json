@@ -1,0 +1,12 @@
+{
+    "Comment": "Text Cleaning Workflow",
+    "StartAt": "Clean Text",
+    "States": {
+      "Clean Text": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:YOUR_REGION:YOUR_ACCOUNT_ID:function:TextCleaningLambda",
+        "End": true
+      }
+    }
+  }
+  
