@@ -2,9 +2,9 @@ from indusnlp import TextCleaner
 
 
 config = [
-    ("select_on_pattern", [r'^"([\s\S]+?)", \{']),
     ("remove_line_with_pattern", [r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-3]?[0-9], \d{4} ,\s+([1-9]|1[0-2]):[0-5][0-9](AM|PM)"]),
     ("remove_line_with_pattern", [r"@\w+"]),
+    ("remove_line_with_pattern", [r'''(' *\s*'|" *\s*")''',r'(\{[^\}]*\}|\[[^\]]*\]|\([^\)]*\))']),
     (
         "remove_line_with_keyword",
         [
@@ -14,14 +14,12 @@ config = [
             "लॉगिन करें","सब्सक्राइब करिए","सब्सक्राइब करें"
         ],
     ),
-    # ('insert_on_pattern',[r"(?<!\.)\.(?!\.)","।"]),
-    ("remove_lines_with_repeated_seqs",4),
     ("handle_whitespace", None),
     ("remove_single_word_lines", None),
     ("remove_redundant_lines", None),
     ("remove_blank_lines", None),
+    ("remove_lines_with_repeated_seqs",4),
 ]
-
 
 txt = '''
 स्थानीय दिल्ली प्रदेश कांग्रेस कमेटी की पूर्व अध्यक्षा श्रीमति ताजदार बाबर नहीं रहीं Sunil Kumar October 2, 2021 Delhi News नई दिल्ली। आज (2 अक्टूबर 2021) सुबह 2 अक्टूबर को दिल्ली प्रदेश कांग्रेस कमेटी की पूर्व अध्यक्षा श्रीमति ताजदार बाबर के दुखत निधन पर दिल्ली प्रदेश कांग्रेस कमेटी के अध्यक्ष चौ. अनिल कुमार ने खेद जताया। उन्होंने श्रीमति ताजदार बाबर के निवास स्थान ईस्ट निजामुद्दीन पर उनके पार्थिव शरीर को अखिल भारतीय कांग्रेस कमेटी के पूर्व अध्यक्ष श्री राहुल गांधी जी के साथ पुष्पांजलि अर्पित आर्पित की।
